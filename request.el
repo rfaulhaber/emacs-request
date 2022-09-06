@@ -414,10 +414,12 @@ FILES is an alist of the following format::
 
 where FILE-N is a list of the form::
 
-    (FILENAME &key PATH BUFFER STRING MIME-TYPE)
+    (FILENAME &key PATH BUFFER STRING MIME-TYPE AS-DATA)
 
 FILE-N can also be a string (path to the file) or a buffer object.
 In that case, FILENAME is set to the file name or buffer name.
+If AS-DATA is non-nil, the contents of the file will be sent as form data rather
+than as file data.
 
 Example FILES argument::
 
@@ -895,7 +897,10 @@ BUG: Simultaneous requests are a known cause of cookie-jar corruption."
             for (name . item) in files
             collect "--form"
             collect
-            (apply #'format "%s=@%s;filename=%s%s"
+            (apply #'format
+                   (if (plist-get (cdr-safe item) :as-data)
+                       "%s=<%s;filename=%s%s"
+                     "%s=@%s;filename=%s%s")
                    (cond ((stringp item)
                           (list name item (file-name-nondirectory item) ""))
                          ((bufferp item)
